@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { createChatSession, Message } from "@/lib/gemini-ai";
 import ChatMessage from "@/components/ChatMessage";
@@ -18,18 +17,15 @@ const WELCOME_MESSAGE: Message = {
 };
 
 const ChatUI: React.FC<ChatUIProps> = ({ initialMessages = [] }) => {
-  // Initialize messages state with welcome message
+  // Initialize messages state with welcome message for UI display only
   const [messages, setMessages] = useState<Message[]>([
     WELCOME_MESSAGE,
     ...initialMessages,
   ]);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Initialize chat session without the welcome message for Gemini
-  // (we'll display it separately in the UI)
-  const [chatSession, setChatSession] = useState(() => 
-    createChatSession([])
-  );
+  // Initialize chat session with an empty history - we'll handle the actual messages separately
+  const [chatSession, setChatSession] = useState(() => createChatSession([]));
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -42,7 +38,7 @@ const ChatUI: React.FC<ChatUIProps> = ({ initialMessages = [] }) => {
   const handleSendMessage = async (content: string) => {
     if (isLoading) return;
 
-    // Add user message immediately
+    // Add user message immediately to UI
     const userMessage: Message = { role: "user", content };
     setMessages(prev => [...prev, userMessage]);
     
@@ -53,7 +49,7 @@ const ChatUI: React.FC<ChatUIProps> = ({ initialMessages = [] }) => {
       // Send to Gemini API
       const response = await chatSession.sendMessage(content);
       
-      // Add AI response
+      // Add AI response to UI
       if (response.done) {
         setMessages(prev => [
           ...prev, 
@@ -64,7 +60,7 @@ const ChatUI: React.FC<ChatUIProps> = ({ initialMessages = [] }) => {
       console.error("Error in chat:", error);
       toast.error("Something went wrong. Please try again.");
       
-      // Add error message
+      // Add error message to UI
       setMessages(prev => [
         ...prev,
         { 
@@ -78,7 +74,7 @@ const ChatUI: React.FC<ChatUIProps> = ({ initialMessages = [] }) => {
   };
 
   const handleReset = () => {
-    // Create a new chat session without the welcome message
+    // Create a new chat session
     const newSession = createChatSession([]);
     setChatSession(newSession);
     

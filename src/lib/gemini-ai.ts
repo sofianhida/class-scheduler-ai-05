@@ -1,4 +1,3 @@
-
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
 // Direct API key usage for frontend demo only
@@ -51,29 +50,32 @@ export interface ChatSession {
 export const createChatSession = (history: Message[] = []): ChatSession => {
   const model = genAI.getGenerativeModel({ model: MODEL_NAME });
   
-  // Filter history to match Gemini's format, ensuring it's not empty and starts with a user message
+  // Keep local chat history
+  const chatHistory: Message[] = [...history];
+  
+  // When starting a chat with Gemini, we need to make sure history is properly formatted
+  // and the first message is from a user if we're providing history
   let geminiHistory = [];
   
   if (history.length > 0) {
-    // If the first message in history is from the model, we need to adjust
-    if (history[0].role === "model") {
-      // We'll skip using the welcome message in the Gemini chat history
-      // It will be handled by our frontend
-      const userMessages = history.filter(msg => msg.role === "user");
-      if (userMessages.length > 0) {
-        geminiHistory = history
-          .filter((_, index) => index > 0) // Skip the first (welcome) message
-          .map(msg => ({
-            role: msg.role === "user" ? "user" : "model",
-            parts: [{ text: msg.content }],
-          }));
-      }
-    } else {
-      // Normal case: first message is already from user
-      geminiHistory = history.map(msg => ({
-        role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: msg.content }],
-      }));
+    // Filter history to match Gemini's format
+    // The API requires that the first message must be from a user
+    const userMessages = history.filter(msg => msg.role === "user");
+    
+    if (userMessages.length > 0) {
+      // Skip any initial model messages and start with the first user message
+      let startProcessing = false;
+      geminiHistory = history
+        .filter(msg => {
+          if (msg.role === "user" && !startProcessing) {
+            startProcessing = true;
+          }
+          return startProcessing;
+        })
+        .map(msg => ({
+          role: msg.role === "user" ? "user" : "model",
+          parts: [{ text: msg.content }],
+        }));
     }
   }
   
@@ -83,9 +85,6 @@ export const createChatSession = (history: Message[] = []): ChatSession => {
     history: geminiHistory,
     systemInstruction: SYSTEM_INSTRUCTION,
   });
-  
-  // Keep local chat history
-  const chatHistory: Message[] = [...history];
   
   return {
     sendMessage: async (message: string) => {
