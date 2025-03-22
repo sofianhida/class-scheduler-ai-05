@@ -13,7 +13,7 @@ interface ChatUIProps {
 
 const WELCOME_MESSAGE: Message = {
   role: "model",
-  content: "Hi there! I'm your AI study assistant. I can help you find study materials and schedule your classes. What would you like help with today?"
+  content: "Hello! I'm your specialized study assistant. I can help you with: 1) Finding textbooks and study resources, 2) Optimizing your class schedule, 3) Learning effective study techniques, and 4) Managing your study time efficiently. How can I assist you today?"
 };
 
 const ChatUI: React.FC<ChatUIProps> = ({ initialMessages = [] }) => {
