@@ -1,3 +1,4 @@
+
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
 // Direct API key usage for frontend demo only
@@ -50,11 +51,31 @@ export interface ChatSession {
 export const createChatSession = (history: Message[] = []): ChatSession => {
   const model = genAI.getGenerativeModel({ model: MODEL_NAME });
   
-  // Filter history to match Gemini's format
-  const geminiHistory = history.map(msg => ({
-    role: msg.role === "user" ? "user" : "model",
-    parts: [{ text: msg.content }],
-  }));
+  // Filter history to match Gemini's format, ensuring it's not empty and starts with a user message
+  let geminiHistory = [];
+  
+  if (history.length > 0) {
+    // If the first message in history is from the model, we need to adjust
+    if (history[0].role === "model") {
+      // We'll skip using the welcome message in the Gemini chat history
+      // It will be handled by our frontend
+      const userMessages = history.filter(msg => msg.role === "user");
+      if (userMessages.length > 0) {
+        geminiHistory = history
+          .filter((_, index) => index > 0) // Skip the first (welcome) message
+          .map(msg => ({
+            role: msg.role === "user" ? "user" : "model",
+            parts: [{ text: msg.content }],
+          }));
+      }
+    } else {
+      // Normal case: first message is already from user
+      geminiHistory = history.map(msg => ({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.content }],
+      }));
+    }
+  }
   
   // Start the chat with system instructions
   const chat = model.startChat({

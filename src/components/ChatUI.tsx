@@ -18,12 +18,19 @@ const WELCOME_MESSAGE: Message = {
 };
 
 const ChatUI: React.FC<ChatUIProps> = ({ initialMessages = [] }) => {
+  // Initialize messages state with welcome message
   const [messages, setMessages] = useState<Message[]>([
     WELCOME_MESSAGE,
     ...initialMessages,
   ]);
   const [isLoading, setIsLoading] = useState(false);
-  const [chatSession, setChatSession] = useState(() => createChatSession([WELCOME_MESSAGE]));
+  
+  // Initialize chat session without the welcome message for Gemini
+  // (we'll display it separately in the UI)
+  const [chatSession, setChatSession] = useState(() => 
+    createChatSession([])
+  );
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -71,8 +78,11 @@ const ChatUI: React.FC<ChatUIProps> = ({ initialMessages = [] }) => {
   };
 
   const handleReset = () => {
-    const newSession = createChatSession([WELCOME_MESSAGE]);
+    // Create a new chat session without the welcome message
+    const newSession = createChatSession([]);
     setChatSession(newSession);
+    
+    // Reset UI messages with welcome message
     setMessages([WELCOME_MESSAGE]);
     toast.success("Chat has been reset");
   };
